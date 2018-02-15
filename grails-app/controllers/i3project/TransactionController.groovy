@@ -9,9 +9,8 @@ import grails.transaction.Transactional
 
 @Transactional(readOnly = true)
 class TransactionController {
-	def exportService
-	
-		def grailsApplication  //inject GrailsApplication
+def exportService
+def grailsApplication  //inject GrailsApplication
 
     static allowedMethods = [save: "POST", update: "PUT", delete: "DELETE"]
 
@@ -27,61 +26,21 @@ class TransactionController {
 		//def lines = Transaction.findAll().collect { [it.item, it.amount].join('---') } as List<String>
 		
 	}
-	def exportTrans(){
+	
+	def exportTrans()
+	{
+		if(!params.max) params.max = 10		
+				if(params?.format && params.format != "html")
+				{
+					response.contentType = grailsApplication.config.grails.mime.types[params.format]
+					response.setHeader("Content-disposition", "attachment; filename=books.${params.extension}")
 		
-		if(!params.max) params.max = 10
-		if(params?.format && params.format != "html"){
-			response.contentType = grailsApplication.config.grails.mime.types[params.format]
-			response.setHeader("Content-disposition", "attachment; filename=books.${params.extension}")
-			List fields = ["item", "amount"]
-			Map labels = ["item": "Item", "amount": "Amount"]
-			Map formatters = [:]
-			Map parameters = ["column.widths": [0.2, 0.3, 0.5]]
-			String title =""
-			def data = []
-			def divId = 0
- 
-			def customKpi = CustomKpi.findByKpiId(Integer.parseInt(params.exportKpiId))
-			title = customKpi.kpiName
-			String kpi = customKpi.kpi
-			data = createJsonFromDataBase(kpi)
-			divId= params.divId
-			def result = getDynamicKPIGraph(data)
-			 
-			def set2=[] as List
-				 
-					for(def rowz in result[1]){
-						LinkedHashMap mapRow= new LinkedHashMap();
-						int j=0;
-						for(def names in result[0]){
-						mapRow.put(names[1].replace(".",""), rowz[j])
-						j++;
-					}
-						println mapRow
-						set2.add(mapRow)
+					exportService.export(params.format, response.outputStream,Transaction.list(params), [:], [:])
 				}
-				 
-			 
-			exportService.export(params.format, response.outputStream,set2, formatters, parameters)
-		}
 		
+				[ transactionInstance: Transaction.list( params ) ]
 	}
-	
-
-	def list = {
-			if(!params.max) params.max = 10
-	
-			if(params?.format && params.format != "html"){
-				response.contentType = grailsApplication.config.grails.mime.types[params.format]
-				response.setHeader("Content-disposition", "attachment; filename=books.${params.extension}")
-	
-	exportService.export(params.format, response.outputStream,Transaction.list(params), [:], [:])
-			}
-	
-			[ transactionInstanceList: Transaction.list( params ) ]
-			
-	}
-    
+	    
     
 	
     def index(Integer max) {
@@ -109,7 +68,7 @@ class TransactionController {
 		
 	}
     @Transactional
-    def save(Transaction transactionInstance) {
+    def save(Transaction transactionInstance, User userInstance) {
 	
         if (transactionInstance == null) {
             notFound()
@@ -124,8 +83,12 @@ class TransactionController {
 		//User userInstance 
 		//userInstance.currentBal = userInstance.startingBal - transactionInstance.amount
 		//userInstance.save flush:true
-
+		
+		userInstance.currentBal = userInstance.currentBal - transactionInstance.amount
+		userInstance.save flush:true
 		transactionInstance.save flush:true
+		
+		
 
         request.withFormat {
             form multipartForm {

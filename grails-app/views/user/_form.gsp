@@ -20,14 +20,7 @@
 
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: userInstance, field: 'currentBal', 'error')} required">
-	<label for="currentBal">
-		<g:message code="user.currentBal.label" default="Current Bal" />
-		<span class="required-indicator">*</span>
-	</label>
-	<g:field name="currentBal" value="${fieldValue(bean: userInstance, field: 'currentBal')}" required=""/>
 
-</div>
 
 <div class="fieldcontain ${hasErrors(bean: userInstance, field: 'transactions', 'error')} ">
 	<label for="transactions">

@@ -7,8 +7,30 @@ import grails.transaction.Transactional
 
 @Transactional(readOnly = true)
 class UserController {
+	CalculationService calculationservice
 
     static allowedMethods = [save: "POST", update: "PUT", delete: "DELETE"]
+	
+	String csvMimeType
+	
+	   String encoding
+	
+	   def go(Transaction transactionInstance,User userInstance) {
+		   final String filename = 'expense.csv'
+		   def lines = Transaction.findAll().collect { [it.item, it.amount].join('   -   ') } as List<String>
+	
+		   def outs = response.outputStream
+		   response.status = OK.value()
+		   response.contentType = "${csvMimeType};charset=${encoding}";
+		   response.setHeader "Name", "attachment; filename=${filename}"
+	//Content-disposition
+		   lines.each { String line ->
+			   outs << "${line}\n\n"
+		   }
+	
+		   outs.flush()
+		   outs.close()
+	   }
 
     def index(Integer max) {
         params.max = Math.min(max ?: 10, 100)
@@ -24,7 +46,7 @@ class UserController {
     def create() {
         respond new User(params)
     }
-
+	
 		
 
     @Transactional
@@ -41,8 +63,12 @@ class UserController {
 		//User userObj = new User
 		//User userInstance
 		//userInstance.currentBal = transactionInstance.amount
-		
+		userInstance.currentBal = userInstance.startingBal
         userInstance.save flush:true
+		
+		//chain(controller:'transactionInstance',action:'save',model:[user:userInstance])
+		
+		//userInstance?.currentBal = transactionInstance.amount
 
         request.withFormat {
             form multipartForm {
