@@ -83,7 +83,8 @@ def grailsApplication  //inject GrailsApplication
 		//User userInstance 
 		//userInstance.currentBal = userInstance.startingBal - transactionInstance.amount
 		//userInstance.save flush:true
-		
+	
+		transactionInstance.dollarAmt = transactionInstance.amount * transactionInstance.dollarTimes
 		userInstance.currentBal = userInstance.currentBal - transactionInstance.amount
 		userInstance.save flush:true
 		transactionInstance.save flush:true

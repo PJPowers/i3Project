@@ -17,12 +17,12 @@ class UserController {
 	
 	   def go(Transaction transactionInstance,User userInstance) {
 		   final String filename = 'expense.csv'
-		   def lines = Transaction.findAll().collect { [it.item, it.amount].join('   -   ') } as List<String>
+		   def lines = Transaction.findAll().collect { [it.owner,it.item, it.amount, it.dollarAmt].join('   -   ') } as List<String>
 	
 		   def outs = response.outputStream
 		   response.status = OK.value()
 		   response.contentType = "${csvMimeType};charset=${encoding}";
-		   response.setHeader "Name", "attachment; filename=${filename}"
+		   response.setHeader "Content-disposition", "attachment; filename=${filename}"
 	//Content-disposition
 		   lines.each { String line ->
 			   outs << "${line}\n\n"
